@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <title>每日红包处理</title>
+    <style lang="css">
+        .center-view {
+            width: 800px;
+            height: 800px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+        }
+        .center-view:hover {
+            box-shadow: 0 4px 16px 0 rgba(0,0,0,.2);
+        }
+        .nav-link_active {
+            color: #007bff !important;
+        }
+        .nav-item {
+            cursor: pointer;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group-text {
+            width: 200px;
+            text-align: right;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .echarts-view {
+            width: 650px;
+            height: 300px;
+        }
+        .center-view_form {
+            display: none;
+        }
+    </style>
+  </head>
+  <body>
+    <section class="center-view">
+        <div class="center-view_nav">
+            <ul class="nav" id="navs">
+                <li class="nav-item nav-link_active">
+                  <a class="nav-link">红包表处理</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link">即期用户处理</a>
+                </li>
+              </ul>
+        </div>
+        <div class="center-view_form" id="active_0">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                <span class="input-group-text">处理日期：</span>
+                </div>
+                <input type="text" id="searchDate" class="form-control" placeholder="请输入需要处理的日期" aria-describedby="basic-addon1">
+            </div>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                <span class="input-group-text">sheet表名称：</span>
+                </div>
+                <input type="text" id="dataSheetName" class="form-control" placeholder="请输入需要处理的sheet表名称" aria-describedby="basic-addon1">
+            </div>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                <span class="input-group-text">需要处理的文件：</span>
+                </div>
+                <input id="inputFill"  class="form-control"aria-describedby="basic-addon1"  type="file" multiple>
+            </div>
+            <div class="text-right">
+                <button type="button" class="btn btn-primary" id="submitBtn">开始处理</button>
+            </div>
+        </div>
+        <div class="center-view_form" id="active_1">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                <span class="input-group-text">处理日期：</span>
+                </div>
+                <input type="text" id="searchDateForm2" class="form-control" placeholder="请输入需要处理的日期" aria-describedby="basic-addon1">
+            </div>
+            <!-- <div class="input-group">
+                <div class="input-group-prepend">
+                <span class="input-group-text">sheet表名称：</span>
+                </div>
+                <input type="text" id="dataSheetName" class="form-control" placeholder="请输入需要处理的sheet表名称" aria-describedby="basic-addon1">
+            </div>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                <span class="input-group-text">需要处理的文件：</span>
+                </div>
+                <input id="inputFill"  class="form-control"aria-describedby="basic-addon1"  type="file" multiple>
+            </div> -->
+            <div class="text-right">
+                <button type="button" class="btn btn-primary" id="submitBtnForm2">开始处理</button>
+            </div>
+        </div>
+        <div class="echarts-view" id="chart"></div>
+    </section>
+
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">提示</h4>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <script src="https://lib.baomitu.com/echarts/4.7.0/echarts-en.common.min.js"></script>
+
+    <script>
+        $(function() {
+            let date = new Date()
+            let m = date.getMonth() + 1
+            let d = date.getDate()
+            $('#active_0').show()
+            $('#submitBtn').on('click', submit)
+            $('#searchDate').val(`${date.getFullYear()}${m > 9 ? m : ('0' + m)}${d > 9 ? d : ( '0' + d) }`)
+            $('#dataSheetName').val(`${m}月明细`)
+            $('#navs .nav-item').on('click', function (e) {
+                const index = $(this).index()
+                $('.center-view_form').hide()
+                $('.nav-item').removeClass('nav-link_active')
+                $(this).addClass('nav-link_active')
+                $(`#active_${index}`).show()
+            })
+        })
+        function initEcharts(xData = [], yData = []) {
+            var myChart = echarts.init(document.getElementById('chart'));
+            var option = {
+                color: ['#3398DB'],
+                tooltip: {
+                    trigger: 'axis'
+                },                
+                xAxis: {
+                    type: 'category',
+                    data: xData
+                },
+                yAxis: {
+                    name: '红包金额(元)',
+                    type: 'value'
+                },
+                series: [{
+                    data: yData,
+                    type: 'bar',
+                    showBackground: true,
+                    backgroundStyle: {
+                        color: 'rgba(220, 220, 220, 0.8)'
+                    }
+                }]
+            };
+            myChart.setOption(option);
+        }
+
+        function submit () {
+            console.log(document.getElementById('inputFill').files[0])
+            if (!document.getElementById('inputFill').files[0] || !$('#searchDate').val() || !$('#dataSheetName').val()) {
+                console.log($('#modalBody'))
+                $('#modalBody').html('请确认参数是否正确')
+                $('#myModal').modal()
+            } else {
+                $.ajax(
+                    {
+                        type: 'GET',
+                        url: '/getModels',
+                        data: {
+                            fileName: document.getElementById('inputFill').files[0].name,
+                            searchDate: $('#searchDate').val(),
+                            dataSheetName: $('#dataSheetName').val()
+                        },
+                        dataType: 'text',
+                        success: function (v) {
+                            let data = v && JSON.parse(v)
+                            console.log(data)
+                            // $('#modalBody').html('文件处理完成')
+                            // $('#myModal').modal()
+                            $('#chart').show()
+                            initEcharts(data.name, data.value)
+                        },
+                        error: function(v) {
+                            $('#modalBody').html(v.responseText)
+                            $('#myModal').modal()
+                            $('#chart').hide()
+                        }
+                    }
+                )
+            }
+        }
+    </script>  
+</body>
+</html>
